@@ -293,6 +293,11 @@
             
             const email = document.getElementById('newEmail').value;
             const password = document.getElementById('newPassword').value;
+            const submitBtn = this.querySelector('.btn');
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
             
             try {
                 const response = await fetch('/api/create-account', {
@@ -303,22 +308,39 @@
                     body: JSON.stringify({ email, password })
                 });
                 
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server tidak mengembalikan JSON. Pastikan server berjalan di port 3000');
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     // Show output
                     document.getElementById('outputEmail').textContent = email;
                     document.getElementById('outputPassword').textContent = password;
-                    document.getElementById('outputTime').textContent = new Date().toLocaleString();
+                    document.getElementById('outputTime').textContent = new Date().toLocaleString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
                     document.getElementById('outputBox').classList.add('show');
                     
                     // Reset form
                     this.reset();
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Error: ' + (data.message || 'Gagal membuat akun'));
                 }
             } catch (error) {
-                alert('Error creating account: ' + error.message);
+                console.error('Full error:', error);
+                alert('Error creating account: ' + error.message + '\n\nPastikan:\n1. Server berjalan (npm start)\n2. Server di port 3000\n3. File server.js ada');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
             }
         });
     </script>
